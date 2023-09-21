@@ -11,7 +11,7 @@ function App() {
   ]);
   const series = [
     {
-      name: 'Acceleration',
+      name: 'Temperature',
       data: dataStream
     },
   ];
@@ -37,21 +37,21 @@ function App() {
       curve: 'smooth'
     },
     title: {
-      text: 'MPU6050 Data Acceleration X (g)',
+      text: 'Temperature in degrees F',
       align: 'left'
     },
     markers: {
       size: 2
     },
     xaxis: {
-      range: 30,
+      range: 100,
       type: 'numeric',
       tickAmount: 'dataPoints',
       tickPlacement: 'on'
     },
     yaxis: {
-      min: -2,
-      max: 2
+      min: -50,
+      max: 120
     }}
 
 
