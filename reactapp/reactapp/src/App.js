@@ -53,10 +53,14 @@ function App() {
       size: 2
     },
     xaxis: {
-      range: 100,
+      range: 300,
       type: 'numeric',
       tickAmount: 'dataPoints',
-      tickPlacement: 'on'
+      tickPlacement: 'on',
+      title:{
+        text: "Seconds Ago",
+        fontsize: '16px'
+      },
     },
     yaxis: {
       min: isCelsius ? -50 : toFahrenheit(-50),
