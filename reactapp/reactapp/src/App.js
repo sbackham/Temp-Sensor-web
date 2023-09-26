@@ -119,18 +119,25 @@ function App() {
         borderRadius: '5px',
         marginBottom: '10px'
       }}>
-        {lastTemperature !== null ? `${lastTemperature} °C` : 'N/A'}
+        {lastTemperature !== null ? `${lastTemperature} ${isCelsius ? '°C' : '°F'}` : 'N/A'}
       </div>
       
-      <Chart series={series} options={options}  height={1000} />
+      <div style={{ overflowX: 'auto', overflowY: 'visible', width: '100%' }}> 
+        <div style={{ width: '2000px' }}> {/* Adjust the width accordingly */}
+            <Chart series={series} options={options} height={1000} />
+        </div>
+    </div>
+
       <button onClick={() => setPauseData(!pauseData)}>
         Stop/Start Data Stream
       </button>
+
       <button onClick={toggleTempUnit}>
         Switch to {isCelsius ? 'Fahrenheit' : 'Celsius'}
       </button>
     </div>
   );
+
 }
 
 
