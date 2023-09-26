@@ -12,7 +12,7 @@ function App() {
     { x: 0, y: 0 }
   ]);
   const series = [
-    {localStorage
+    {localStorage,
       name: 'Temperature',
       data: dataStream.map(point => ({
         x: point.x,
