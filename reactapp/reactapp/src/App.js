@@ -5,15 +5,19 @@ import ApexCharts from 'apexcharts'
 
 function App() {
   const [pauseData, setPauseData] = React.useState(false);
+  const [isCelsius, setIsCelsius] = React.useState(true); // Define this state here at the top
   const [lastTemperature, setLastTemperature] = React.useState(null); // State to hold last received temperature
   const [socket, setSocket] = React.useState(null);
   const [dataStream, setDataStream] = React.useState([
     { x: 0, y: 0 }
   ]);
   const series = [
-    {
+    {localStorage
       name: 'Temperature',
-      data: dataStream
+      data: dataStream.map(point => ({
+        x: point.x,
+        y: isCelsius ? point.y : toFahrenheit(point.y)
+      })) //converts the data points based on C or F selection
     },
   ];
   const options = {
@@ -55,12 +59,21 @@ function App() {
       tickPlacement: 'on'
     },
     yaxis: {
-      min: -50,
-      max: 120
+      min: isCelsius ? -50 : toFahrenheit(-50),
+      max: isCelsius ? 120 : toFahrenheit(120)
     }};
 
-    var chart = new ApexCharts(document.querySelector("#chart"), options);
-    chart.render();
+
+    // Function to convert Celsius to Fahrenheit
+    const toFahrenheit = (celsius) => celsius * 9 / 5 + 32;
+
+    // Function to toggle temperature unit
+    const toggleTempUnit = () => setIsCelsius(!isCelsius); // Toggle temperature unit state
+  
+  
+
+    //var chart = new ApexCharts(document.querySelector("#chart"), options);
+    //chart.render();
 
 
   async function appendData(dataPoint) {
@@ -109,10 +122,12 @@ function App() {
         {lastTemperature !== null ? `${lastTemperature} °C` : 'N/A'}
       </div>
       
-      <Chart series={series} options={options} height={1000} />
       <Chart series={series} options={options}  height={1000} />
       <button onClick={() => setPauseData(!pauseData)}>
         Stop/Start Data Stream
+      </button>
+      <button onClick={toggleTempUnit}>
+        Switch to {isCelsius ? 'Fahrenheit' : 'Celsius'}
       </button>
     </div>
   );
