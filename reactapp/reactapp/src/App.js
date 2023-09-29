@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import io from 'socket.io-client';
 import Chart from "react-apexcharts";
 import ApexCharts from 'apexcharts';
+
 
 const toFahrenheit = (celsius) => celsius * 9 / 5 + 32;
 
@@ -13,6 +14,11 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [displayOn, setDisplayOn] = useState(true);
   const [yAxisRange, setYAxisRange] = useState({min: 10, max: 50});
+  const [isUnplugged, setIsUnplugged] = useState(false); //states for button functionality
+  const [isSwitchOff, setIsSwitchOff] = useState(false);
+  const dataPointWidth = 10;
+  const chartContainerRef = useRef();
+
 //const [dataStream, setDataStream] = useState([]);
 
   
@@ -47,7 +53,7 @@ function App() {
       }
     },
     dataLabels: {
-      enabled: true
+      enabled: false
     },
     stroke: {
       curve: 'smooth'
@@ -57,7 +63,7 @@ function App() {
       align: 'left'
     },
     markers: {
-      size: 2
+      size: 0
     },
     xaxis: {
       type: 'numeric',
@@ -66,7 +72,8 @@ function App() {
       max: 0,
       labels: {
           show: true,
-          formatter: (value) => `${Math.abs(value)} s ago`,
+          formatter: (value) => 
+          `${Math.abs(Math.round(value))} s ago`,
       },
       axisBorder: {
           show: true,
@@ -76,10 +83,15 @@ function App() {
       },
   },
       
-    yaxis: {
-      min: yAxisRange.min,
-      max: yAxisRange.max
+  yaxis: {
+    min: yAxisRange.min,
+    max: yAxisRange.max,
+    labels:{
+      formatter: (value) => {
+        return Math.round(value); //round to nearest whole number
+      }
     }
+  }
   };
 
   const turnOnOffDisplay = async () => {
@@ -93,13 +105,41 @@ function App() {
   };
 
   const toggleTempUnit = () => {
-    setIsCelsius(!isCelsius);
-    if(isCelsius) {
-        setYAxisRange({min: 50, max: 122});
-    } else {
-        setYAxisRange({min: 10, max: 50});
+    // Calculate the new dataStream first before changing any state
+    const convertedDataStream = dataStream.map(point => ({
+      ...point,
+      y: isCelsius ? toFahrenheit(point.y) : (point.y - 32) * (5 / 9) // convert each y value to the other unit
     }
-  };
+    ));
+    
+    // Now, update the states
+    setIsCelsius(!isCelsius); // toggle the unit
+    setDataStream(convertedDataStream); // set the converted dataStream
+    
+    // Also, update the y-axis range and series in the same function.
+    if (isCelsius) {
+      setYAxisRange({ min: 50, max: 122 });
+  } else {
+      setYAxisRange({ min: 10, max: 50 });
+  }
+
+    // Update the series with the new converted dataStream
+    ApexCharts.exec('realtime', 'updateOptions', {
+      series: [{
+          data: convertedDataStream
+      }],
+      yaxis: {
+          min: yAxisRange.min,
+          max: yAxisRange.max
+      },
+      chart: {
+          animations: {
+              enabled: false
+          }
+      }
+  }, false, true); // true is to force re-rendering.
+};
+
 
   const appendData = (dataPoint) => {
     setDataStream((prev) => {
@@ -114,6 +154,26 @@ function App() {
     });
     setCurrentTime(currentTime - 1);
 };
+  
+
+
+useEffect(() => {
+  if (dataStream.length > 300 && chartContainerRef.current) {
+    // Calculate the new width
+    const newWidth = dataPointWidth * dataStream.length;
+    chartContainerRef.current.style.width = `${newWidth}px`;
+  }
+}, [dataStream.length]);
+
+useEffect(() => {
+  ApexCharts.exec('realtime', 'updateOptions', {
+      chart: {
+          animations: {
+              enabled: true
+          }
+      }
+  });
+}, [isCelsius]);
 
   
   useEffect(() => {
@@ -146,20 +206,27 @@ function App() {
   return (
     <div>
       <div style={{
-        fontSize: '24px',
+        fontSize: '36px',
         textAlign: 'center',
         padding: '10px',
         border: '1px solid #ccc',
         borderRadius: '5px',
         marginBottom: '10px'
       }}>
-        {lastTemperature !== null ? `${lastTemperature} ${isCelsius ? '°C' : '°F'}` : 'N/A'}
-      </div>
-      <div style={{ overflowX: 'auto', overflowY: 'visible', width: '100%' }}>
-        <div style={{ width: '2000px' }}>
+        {isUnplugged ? 'Unplugged sensor' 
+        : isSwitchOff ? 'No data available'
+        :lastTemperature !== null 
+    ? `${isCelsius ? lastTemperature : toFahrenheit(lastTemperature)} ${isCelsius ? '°C' : '°F'}` 
+    : 'N/A'}
+</div>
+
+<div style={{ overflowX: 'auto', overflowY: 'visible', width: '100%' }}>
+        {/* Ref to chart container */}
+        <div ref={chartContainerRef} style={{ width: `${dataPointWidth * 300}px` }}>
           <Chart series={series} options={options} height={700} />
         </div>
       </div>
+      
       <button onClick={() => setPauseData(!pauseData)}>
         {pauseData ? "Start Data Stream" : "Stop Data Stream"}
       </button>

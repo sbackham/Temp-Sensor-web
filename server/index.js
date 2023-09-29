@@ -5,10 +5,11 @@ const express = require("express");
 const APP = express();
 const http = require('http');
 const MQTT = require('mqtt');
+
 const server = http.createServer(APP);
 const { Server } = require("socket.io");
 
-const SERVERHOSTNAME = "230166eb60024a72b256ff9f4b53fbe9.s1.eu.hivemq.cloud"; // Enclosed in quotes
+const SERVERHOSTNAME = "179a4fcf22644a738e506f7b145adea1.s1.eu.hivemq.cloud"; // Enclosed in quotes
 const PORT = 8883;
 const USERNAME = "team14";
 const PASSWORD = "GirlCoded12";
@@ -27,11 +28,16 @@ const client = MQTT.connect(CONNECTURL, {
     reconnectPeriod: 10000,
 });
 
-APP.post('/turnOffLCD', (req, res) => {
-    // Publish a message to the MQTT broker to turn off the LCD.
+APP.post('/turnOnLCD', (req, res) => {
+    client.publish('lcd/command', 'on');
+    res.send('LCD Turn On command sent.');
+   });
+   
+   APP.post('/turnOffLCD', (req, res) => {
     client.publish('lcd/command', 'off');
     res.send('LCD Turn Off command sent.');
-  });
+   });
+   
   
   APP.listen(EXPRESSPORT, () => {
     console.log(`Server is running at http://localhost:${EXPRESSPORT}`);
