@@ -14,8 +14,8 @@ const USERNAME = "team14";
 const PASSWORD = "GirlCoded12";
 const CLIENTID = "team14"; // Enclosed in quotes
 const CONNECTURL = `mqtts://${SERVERHOSTNAME}:${PORT}`;
-const TOPIC = 'picow/ay';
-
+const TOPIC = 'Temp';
+const EXPRESSPORT = 3001;
 const io = new Server(server); // Created an instance of Server
 
 const client = MQTT.connect(CONNECTURL, {
@@ -26,6 +26,17 @@ const client = MQTT.connect(CONNECTURL, {
     password: PASSWORD,
     reconnectPeriod: 10000,
 });
+
+APP.post('/turnOffLCD', (req, res) => {
+    // Publish a message to the MQTT broker to turn off the LCD.
+    client.publish('lcd/command', 'off');
+    res.send('LCD Turn Off command sent.');
+  });
+  
+  APP.listen(EXPRESSPORT, () => {
+    console.log(`Server is running at http://localhost:${EXPRESSPORT}`);
+  }
+  );
 
 let ay_latest = {}; // Declared with let
 
@@ -61,4 +72,5 @@ client.on('message', (TOPIC, payload) => {
     ay_latest.value = payload.toString()
 })
 
-server.listen(80, () => { console.log("Server started") })
+
+server.listen(3000, () => { console.log("Server started") })

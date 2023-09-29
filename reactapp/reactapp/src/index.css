@@ -11,3 +11,5 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* Add this line to your App.css or index.css file */
+@import '~apexcharts/dist/apexcharts.css';
