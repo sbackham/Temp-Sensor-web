@@ -116,15 +116,6 @@ function App() {
 };
 
   
-useEffect(() => {
-  ApexCharts.exec('realtime', 'updateSeries', [{
-      data: dataStream
-  }]);
-}, [dataStream, currentTime]);
-
-  
-  
-  
   useEffect(() => {
     const socket = io.connect('http://localhost:3000/', { transports: ['websocket', 'polling', 'flashsocket'] });
     setSocket(socket);
