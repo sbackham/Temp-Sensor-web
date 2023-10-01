@@ -9,18 +9,20 @@ const MQTT = require('mqtt');
 const server = http.createServer(APP);
 const { Server } = require("socket.io");
 
-const SERVERHOSTNAME = "179a4fcf22644a738e506f7b145adea1.s1.eu.hivemq.cloud"; // Enclosed in quotes
+/*yes i realize it is very dangerous to have my credentials out in the open like this. it should be in an env var file
+  */
+const SERVERHOSTNAME = "179a4fcf22644a738e506f7b145adea1.s1.eu.hivemq.cloud"; 
 const PORT = 8883;
 const USERNAME = "team14";
 const PASSWORD = "GirlCoded12";
-const CLIENTID = "team14"; // Enclosed in quotes
+const CLIENTID = "team14"; 
 const CONNECTURL = `mqtts://${SERVERHOSTNAME}:${PORT}`;
 const TOPIC = 'Temp';
 const EXPRESSPORT = 3001;
-const io = new Server(server); // Created an instance of Server
+const io = new Server(server); //creates server instance
 
 const client = MQTT.connect(CONNECTURL, {
-    clientId: CLIENTID, // Changed to camelCase
+    clientId: CLIENTID, 
     clean: true,
     connectTimeout: 7200,
     username: USERNAME,
@@ -28,15 +30,27 @@ const client = MQTT.connect(CONNECTURL, {
     reconnectPeriod: 10000,
 });
 
+/*publish msgs to PICO for LCD commands 
+  */
 APP.post('/turnOnLCD', (req, res) => {
-    client.publish('lcd/command', 'on');
-    res.send('LCD Turn On command sent.');
-   });
+    client.publish('lcd/command', 'on', {}, (error) => {
+        if(error) {
+            console.error('Error publishing message:', error);
+            return res.status(500).send('Could not turn on LCD');
+        }
+        res.send('LCD Turn On command sent.');
+    });
+});
    
-   APP.post('/turnOffLCD', (req, res) => {
-    client.publish('lcd/command', 'off');
-    res.send('LCD Turn Off command sent.');
-   });
+APP.post('/turnOffLCD', (req, res) => {
+    client.publish('lcd/command', 'off', {}, (error) => {
+        if(error) {
+            console.error('Error publishing message:', error);
+            return res.status(500).send('Could not turn off LCD');
+        }
+        res.send('LCD Turn Off command sent.');
+    });
+});
    
   
   APP.listen(EXPRESSPORT, () => {
@@ -44,7 +58,7 @@ APP.post('/turnOnLCD', (req, res) => {
   }
   );
 
-let ay_latest = {}; // Declared with let
+let ay_latest = {}; 
 
 client.on("error", function (error) { console.log("Can't connect" + error) })
 
@@ -55,7 +69,7 @@ const corsOptions = {
 APP.use(cors(corsOptions))
 
 io.on('connection', function (socket) {
-    console.log('a user connected');
+    console.log('a user connected'); //to see if a connection was made w client
     socket.on('Client', (message) => {
         console.log(message)
     })
